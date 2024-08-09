@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.tdx</groupId>
+    <artifactId>tdx-parent</artifactId>
+    <version>1.9</version>
+  </parent>
+
+  <groupId>com.td.wem</groupId>
+  <artifactId>reference-implementation</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>java-reference-implementation</name>
+
+  <properties>
+    <java.version>17</java.version>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <surefireArgLine>-Xms512m -Xmx1g</surefireArgLine>
+
+    <!-- Talkdesk Libs -->
+    <td-athena.version>4.8.2</td-athena.version>
+    <wiremock-talkdesk-api.version>1.20.20</wiremock-talkdesk-api.version>
+
+    <!-- External Libs -->
+    <dependency.version.quarkus>2.16.6.Final</dependency.version.quarkus>
+    <dependency.version.lombok>1.18.24</dependency.version.lombok>
+    <dependency.version.mapstruct>1.5.3.Final</dependency.version.mapstruct>
+    <new-relic-agent.version>8.2.0</new-relic-agent.version>
+    <commons-lang3.version>3.12.0</commons-lang3.version>
+    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
+    <hibernate-enhance-maven-plugin.version>6.0.2.Final</hibernate-enhance-maven-plugin.version>
+    <plugin.version.geronimo.openapi>1.0.15</plugin.version.geronimo.openapi>
+    <openapi-maven-plugin.version>1.7.0</openapi-maven-plugin.version>
+    <plugin.version.spotbugs>4.2.3</plugin.version.spotbugs>
+    <plugin.version.pmd>3.16.0</plugin.version.pmd>
+    <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+    <microprofile-health-api.version>4.0</microprofile-health-api.version>
+    <microprofile-openapi-api.version>3.0</microprofile-openapi-api.version>
+    <assertj.version>3.24.2</assertj.version>
+    <mockito.version>5.2.0</mockito.version>
+    <micrometer-registry-new-relic.version>0.10.0</micrometer-registry-new-relic.version>
+
+    <sonar.coverage.jacoco.xmlReportPaths>target/jacoco-report/*.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <!--suppress UnresolvedMavenProperty -->
+    <sonar.branch.name>${env.GIT_BRANCH}</sonar.branch.name>
+
+    <maven.repository.base.url>https://nexus-general.us-east-1.svc.talkdeskapp.com/repository</maven.repository.base.url>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>maven2-proxy</id>
+      <url>${maven.repository.base.url}/maven2-proxy/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>td-all</id>
+      <url>${maven.repository.base.url}/talkdesk-maven/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>talkdesk-all</id>
+      <url>${maven.repository.base.url}/talkdesk-maven-snapshot/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>td-all</id>
+      <url>${maven.repository.base.url}/talkdesk-maven/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <distributionManagement>
+    <repository>
+      <id>talkdesk-all</id>
+      <url>${maven.repository.base.url}/talkdesk-maven-internal/</url>
+    </repository>
+    <snapshotRepository>
+      <id>talkdesk-all</id>
+      <url>${maven.repository.base.url}/talkdesk-maven-snapshot/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-bom</artifactId>
+        <version>${dependency.version.quarkus}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct</artifactId>
+        <version>${dependency.version.mapstruct}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-orm</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+    </dependency>
+
+    <!-- For EL support in BVal and Message Interpolation -->
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>jakarta.el</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-orm-panache</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jdbc-h2</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-flyway</artifactId>
+    </dependency>
+
+    <!-- For REST -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jsonb</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-swagger-ui</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-jwt</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-security</artifactId>
+      <version>${td-athena.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-pagination</artifactId>
+      <version>${td-athena.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-security-xss</artifactId>
+      <version>${td-athena.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-utils</artifactId>
+      <version>${td-athena.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-error-handling</artifactId>
+      <version>${td-athena.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-quarkus-newrelic</artifactId>
+      <version>${td-athena.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang3.version}</version>
+    </dependency>
+
+    <!-- microprofile -->
+    <dependency>
+      <groupId>org.eclipse.microprofile.openapi</groupId>
+      <artifactId>microprofile-openapi-api</artifactId>
+      <version>${microprofile-openapi-api.version}</version>
+    </dependency>
+
+    <!-- Observability -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-micrometer</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.newrelic.telemetry</groupId>
+      <artifactId>micrometer-registry-new-relic</artifactId>
+      <version>${micrometer-registry-new-relic.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-opentelemetry</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.opentelemetry.instrumentation</groupId>
+      <artifactId>opentelemetry-jdbc</artifactId>
+    </dependency>
+
+    <!-- healthcheck -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-healthcheck</artifactId>
+      <version>${td-athena.version}</version>
+      <exclusions>
+        <!-- Use microprofile-health-api version used by io.quarkus:quarkus-smallrye-health to avoid duplication of the healtchecks -->
+        <exclusion>
+          <groupId>org.eclipse.microprofile.health</groupId>
+          <artifactId>microprofile-health-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.td.athena</groupId>
+      <artifactId>td-athena-healthcheck-db</artifactId>
+      <version>${td-athena.version}</version>
+      <exclusions>
+        <!-- Use microprofile-health-api version used by io.quarkus:quarkus-smallrye-health to avoid duplication of the healtchecks -->
+        <exclusion>
+          <groupId>org.eclipse.microprofile.health</groupId>
+          <artifactId>microprofile-health-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- healthcheck ^-->
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${dependency.version.lombok}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-logging-json</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.newrelic.agent.java</groupId>
+      <artifactId>newrelic-agent</artifactId>
+      <version>${new-relic-agent.version}</version>
+    </dependency>
+
+    <!-- Test Dependencies -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jacoco</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.tdx.wiremock</groupId>
+      <artifactId>wiremock-talkdesk-api</artifactId>
+      <version>${wiremock-talkdesk-api.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/deployment-details.txt</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/deployment-details.txt</exclude>
+        </excludes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>4.0.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
+          <commitIdGenerationMode>flat</commitIdGenerationMode>
+          <gitDescribe>
+            <skip>true</skip>
+          </gitDescribe>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>${java.version}</release>
+          <forceJavacCompilerUse>true</forceJavacCompilerUse> <!-- https://issues.apache.org/jira/browse/MCOMPILER-346 -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${dependency.version.lombok}</version>
+            </path>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>${dependency.version.mapstruct}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <version>${dependency.version.quarkus}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- <forkCount>1C</forkCount> -->
+          <!-- Required to generate jacoco-ut.exec -->
+          <argLine>${surefireArgLine}</argLine>
+
+          <systemPropertyVariables>
+            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.hibernate.orm.tooling</groupId>
+        <artifactId>hibernate-enhance-maven-plugin</artifactId>
+        <version>${hibernate-enhance-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <configuration>
+              <enableDirtyTracking>true</enableDirtyTracking>
+            </configuration>
+            <goals>
+              <goal>enhance</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>api</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.geronimo</groupId>
+            <artifactId>geronimo-openapi-maven-plugin</artifactId>
+            <version>${plugin.version.geronimo.openapi}</version>
+            <executions>
+              <execution>
+                <id>generate-openapi.json</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>openapi.json</goal>
+                </goals>
+                <configuration>
+                  <output>${project.build.outputDirectory}/META-INF/openapi.json</output>
+                  <prettify>true</prettify>
+                  <application>com.talkdesk.tag.reference.RestApplication</application>
+                  <endpointClasses>
+                    <endpointClass>com.talkdesk.tag.reference.user.resource.UserApi</endpointClass>
+                  </endpointClasses>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.talkdesk.openapi</groupId>
+            <artifactId>openapi-maven-plugin</artifactId>
+            <version>${openapi-maven-plugin.version}</version>
+            <configuration>
+              <openapiFile>${project.build.outputDirectory}/META-INF/openapi.json</openapiFile>
+              <pathsProperties>${project.basedir}/src/main/resources/openapi/paths.properties</pathsProperties>
+              <definitionsProperties>${project.basedir}/src/main/resources/openapi/definitions.properties</definitionsProperties>
+              <remove500Responses>true</remove500Responses>
+              <removeEmptyParameters>true</removeEmptyParameters>
+              <responseNumbersQuotes>true</responseNumbersQuotes>
+              <arrayRemoveDoubleQuotes>true</arrayRemoveDoubleQuotes>
+              <booleanRemoveDoubleQuotes>true</booleanRemoveDoubleQuotes>
+              <removeEmptyResponseContents>true</removeEmptyResponseContents>
+              <definitionsFileName>reference_implementation.yaml</definitionsFileName>
+            </configuration>
+            <executions>
+              <execution>
+                <id>split-openapi-files</id>
+                <phase>process-classes</phase>
+                <goals>
+                  <goal>split</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-resources</id>
+                <phase>process-classes</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.basedir}/src/main/resources/META-INF/</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${project.build.outputDirectory}/META-INF/</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

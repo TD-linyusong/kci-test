@@ -1,0 +1,12 @@
+version: "3.4"
+
+services:
+
+  maven:
+    image: maven:3.8.6-eclipse-temurin-17
+    command: mvn -s settings.xml clean verify
+    volumes:
+      - ..:/workspace
+      - /.m2:/.m2
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace

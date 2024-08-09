@@ -1,0 +1,45 @@
+Build phase:
+  stages:
+    Maven Build:
+      type: tests
+      reports:
+        - 'target/surefire-reports/*.xml'
+      steps:
+        - docker-compose -f k8s-ci/docker-compose.yml up --abort-on-container-exit --exit-code-from maven --no-color
+        - ls -la target
+    SonarQube:
+      steps:
+        - ./k8s-ci/run-sonar.sh
+      when:
+        - master
+        - ^PR-\d*$
+      type: sonarqube
+      QG Wait: true
+      Fail Pipeline: true
+    Build Docker Images:
+      when:
+        - master
+        - ^PR-\d*$
+      type: docker_build
+      app_images:
+        - dockerfile: Dockerfile
+          app_name: java-reference-implementation
+      platforms:
+        - linux/amd64
+        - linux/arm64
+    Push Docker Images:
+      when:
+        - master
+        - ^PR-\d*$
+      type: docker_push
+
+Deploy phase:
+  stg:
+    deploy mode: automatic
+    when:
+      - master
+    stages:
+      Deploy to STG:
+        type: deploy_kubernetes
+        app_name:
+          - java-reference-implementation

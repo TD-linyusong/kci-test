@@ -1,0 +1,36 @@
+version: 2
+registries:
+  maven-github:
+    type: maven-repository
+    url: https://nexus.svc.talkdeskapp.com/repository/talkdesk-maven/
+    username: dependabot
+    password: ${{secrets.DEPENDABOT_NEXUS_TOKEN}}
+  hub.talkdeskapp.com:
+    type: docker-registry
+    url: https://hub.talkdeskapp.com
+    username: ${{secrets.DEPENDABOT_USER}}
+    password: ${{secrets.DEPENDABOT_PASSWORD}}
+    replaces-base: true
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      # Check for updates once a week. By default, this is on Monday.
+      interval: weekly
+      time: "21:00"
+    registries:
+      - maven-github
+    target-branch: "master"
+    rebase-strategy: "auto"
+    open-pull-requests-limit: 22
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      # Check for docker image dependencies updates once a week. By default, this is on Monday.
+      interval: weekly
+      time: "21:00"
+    registries:
+      - hub.talkdeskapp.com
+    target-branch: "master"
+    rebase-strategy: "auto"
+    open-pull-requests-limit: 22
